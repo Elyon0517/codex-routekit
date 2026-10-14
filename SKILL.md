@@ -3,7 +3,7 @@ name: token-saver
 description: "Use only when a task is large enough to be worth farming out to a separate model session: coordinated work across three or more files, an architecture or migration decision, a dependency graph with two or more independently checkable result stages, or an explicit request to route/benchmark/pick a model. Do NOT use for single-file edits, typo or docstring fixes, renames, reading or summarising code, answering questions, running a command, or any change you can finish in one pass — measured cost of routing one task is 65,000-97,000 tokens regardless of task size, so routing small work loses more than any model choice can save. When unsure, do not use this skill."
 ---
 
-# Aureon
+# Codex RouteKit
 
 Routes a task to the cheapest model rung proven to work for its shape, and refuses to route
 work too small to pay for the routing.

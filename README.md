@@ -1,10 +1,16 @@
-# Aureon
+# Codex RouteKit
+
+**Adaptive model routing for Codex, backed by execution evidence.**
+
+[Quick start](#install) · [Architecture](#architecture) · [Configuration](#configuration) · [Benchmarks](#baseline--the-problem-not-the-result) · [Star this project](https://github.com/Elyon0517/codex-routekit)
 
 A model-routing engine for Codex. Scores every task, skips routing entirely when the task is
 too small to pay for it, serves repeat work from cache, and picks the cheapest model rung
 proven to work for that task shape.
 
-Extracted from the routing core of qin-codex-skills. Uses the Python standard library only.
+Formerly **Aureon**. Extracted from the routing core of qin-codex-skills. Uses the Python standard library only.
+
+If this helps you understand or improve your Codex routing, please [give Codex RouteKit a star](https://github.com/Elyon0517/codex-routekit) ⭐ — it helps other builders discover the project.
 
 The default branch is `main`. Start with the installation steps below, then evaluate a task
 with `fast_path.py` before choosing to route it. Small tasks should stay in the current session.
@@ -22,6 +28,60 @@ with `fast_path.py` before choosing to route it. Small tasks should stay in the 
 | **Learning** | `obsidian_model_memory.py` | Receipt-backed only. 2 PASS → down a rung, quality FAIL → up a rung, stable pair freezes. Operational failures are neutral. |
 | **Trigger** | `SKILL.md` | Its `description` is the first filter: small tasks never load the skill, so they cost nothing. 17 references load only when their situation occurs. |
 | **Benchmark** | `benchmark_suite_runner.py` | Direct vs Auto A/B harness. `strategy_performance.py` is the only authority for a savings claim. |
+
+---
+
+## Architecture
+
+Codex RouteKit separates task admission, model selection, execution evidence, and learning.
+The skill decides when to load the engine; the fast-path gate checks whether a task can stay
+in the current session. Only tasks that proceed to routing need a new execution session.
+
+```mermaid
+flowchart TD
+    Task[Task in the current Codex session] --> Trigger{Skill trigger}
+    Trigger -->|Small task / no routing needed| Inline[Complete in the current session]
+    Trigger -->|Routing candidate| Gate[Fast-path gate]
+    Gate -->|Eligible for inline work| Inline
+    Gate -->|Continue routing| Route{Execution shape}
+    Route -->|Single producer| Runner[Adaptive model runner]
+    Route -->|Multiple result stages| Graph[Task graph dispatcher]
+    Runner --> Execute[Model execution and receipt collection]
+    Runner -->|Admitted independent-source graph| Graph
+    Graph --> Execute
+    Policy[Routing policy and model ladder] -.-> Runner
+    Policy -.-> Graph
+    Execute --> Codex[Codex CLI]
+    Execute -->|Configured local model| Local[Local compatible endpoint]
+    Codex --> Evidence[Result and runtime receipt]
+    Local --> Evidence
+    Evidence --> Learn[Receipt-backed model memory]
+    Learn -.->|Future model selection| Runner
+    Learn -.-> Graph
+```
+
+| Layer | Main modules | Responsibility |
+|---|---|---|
+| Admission | `SKILL.md`, `fast_path.py`, `task_signals.py` | Load routing instructions on demand and identify small tasks that can run inline. |
+| Selection | `resolve_entry_model.py`, `routing_policy.py`, `model_registry.py` | Resolve the entry model and effort, available rungs, and routing constraints. |
+| Orchestration | `obsidian_adaptive_model_runner.py`, `task_route_dispatcher.py` | Run a producer or coordinate graph nodes and their dependencies. |
+| Execution and evidence | `model_execution_receipt.py`, `local_producer.py` | Execute the selected model and record the evidence available from that backend. |
+| Learning | `obsidian_model_memory.py`, `session_effort.py` | Use verified outcomes and session context to inform subsequent routing decisions. |
+| Reuse | `result_cache.py` | Provide an explicit cache CLI keyed by prompt, input contents, and model/effort pair. |
+| Measurement | `benchmark_suite_runner.py`, `strategy_performance.py` | Compare Direct and Auto runs and report measured performance. |
+
+**Cache integration:** the result cache is a separate utility, not an automatic step in every
+runner or dispatcher call. A caller can look up a matching result before execution and store
+a reusable result afterward using the [cache commands](#commands).
+
+**Evidence boundary:** Codex receipts are reconstructed from CLI events, the threads database,
+and rollout files. Local execution records only what its backend can actually observe.
+Unverified model assignments must not be treated as receipt-backed learning evidence.
+
+**State boundary:** the committed `assets/` directory supplies the frozen model ladder and
+fixtures. Runtime history and caches default to `~/.codex/model-routing-memory/`; graph output
+and receipt paths are determined by the execution configuration. Optional Obsidian projection
+is not required for routing.
 
 ---
 
@@ -102,8 +162,8 @@ router — without it they have nothing to gate or cache.
 ## Install
 
 ```bash
-git clone --branch main https://github.com/Elyon0517/aureon.git
-cd aureon
+git clone --branch main https://github.com/Elyon0517/codex-routekit.git
+cd codex-routekit
 python3 -m unittest discover -s tests -p 'test_*.py' -b
 ```
 
@@ -307,3 +367,13 @@ Use the engine only when measured routing savings exceed the session overhead fo
 - **Backend portability** — see Requirements.
 - **The upstream lifecycle skills** — `management`, `optimization`, `code`, `prompt`,
   `workflow`, and the prose validators.
+
+## Support the project
+
+If Codex RouteKit is useful to you, **[give it a star on GitHub](https://github.com/Elyon0517/codex-routekit)** ⭐.
+It helps more developers discover evidence-based model routing.
+
+Have a reproducible routing issue or an idea for improvement?
+[Open an issue](https://github.com/Elyon0517/codex-routekit/issues) with the task shape, expected
+behavior, and sanitized evidence. Please remove prompts, paths, and credentials that should
+remain private before sharing receipts or logs.
