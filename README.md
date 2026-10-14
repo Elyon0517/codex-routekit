@@ -1,4 +1,4 @@
-# Token Saver
+# Aureon
 
 A model-routing engine for Codex. Scores every task, skips routing entirely when the task is
 too small to pay for it, serves repeat work from cache, and picks the cheapest model rung
@@ -102,8 +102,8 @@ router — without it they have nothing to gate or cache.
 ## Install
 
 ```bash
-git clone --branch main https://github.com/Elyon0517/Token-saver.git
-cd Token-saver
+git clone --branch main https://github.com/Elyon0517/aureon.git
+cd aureon
 python3 -m unittest discover -s tests -p 'test_*.py' -b
 ```
 
@@ -298,8 +298,7 @@ simple and medium were −186.2% and −84.8%.
 | Mostly small edits, questions, single-file changes | **Do not install.** Doing the work in your existing session is already the cheapest path. |
 | Regularly large, multi-file, architecture-level tasks, driven from a strong model | Worth installing — the spawn amortises. Take your own baseline first. |
 
-Installing this because it is called a token saver, without work that clears the 65k bar, will
-cost you more than not installing it.
+Use the engine only when measured routing savings exceed the session overhead for your workload.
 
 ## Not included
 
