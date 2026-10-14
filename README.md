@@ -4,7 +4,10 @@ A model-routing engine for Codex. Scores every task, skips routing entirely when
 too small to pay for it, serves repeat work from cache, and picks the cheapest model rung
 proven to work for that task shape.
 
-Extracted from the routing core of qin-codex-skills. 641 tests, Python standard library only.
+Extracted from the routing core of qin-codex-skills. Uses the Python standard library only.
+
+The default branch is `main`. Start with the installation steps below, then evaluate a task
+with `fast_path.py` before choosing to route it. Small tasks should stay in the current session.
 
 ---
 
@@ -57,9 +60,9 @@ rows in Codex's own `state_5.sqlite`:
 | List 5 function names (read-only) | 64,980 | 15,425 | 403 | 0.62% |
 | Fix one typo, `teh` → `the` | 96,584 | 16,190 | 1,034 | 1.07% |
 
-Routing anything through `codex exec` costs 65–97k logical tokens before the task starts,
-independent of how small the task is. That fixed cost is the thing worth avoiding — beside it,
-which model and effort get chosen barely registers.
+These two routed runs consumed 65–97k logical tokens in total. They demonstrate substantial
+fixed session overhead, but do not establish a universal cost for every `codex exec` run. That fixed cost is the thing worth avoiding — beside it,
+model and effort selection alone cannot be assumed to offset it.
 
 Same task text, both paths:
 
@@ -99,7 +102,7 @@ router — without it they have nothing to gate or cache.
 ## Install
 
 ```bash
-git clone git@github.com:Elyon0517/Token-saver.git
+git clone --branch main https://github.com/Elyon0517/Token-saver.git
 cd Token-saver
 python3 -m unittest discover -s tests -p 'test_*.py' -b
 ```
