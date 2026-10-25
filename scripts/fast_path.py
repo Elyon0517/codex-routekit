@@ -48,10 +48,7 @@ def _load_file(name, path):
 SCRIPT_DIR = Path(__file__).resolve().parent
 ENGINE_ROOT = SCRIPT_DIR.parent
 
-# The gate imports ONLY the dependency-free signal module. It must be able to answer even
-# when the model ladder, routing memory, or dispatcher is missing or corrupt -- a gate that
-# cannot say "this is too small to route" because an unrelated file is broken is worse than
-# no gate at all.
+# Import only the dependency-free signal module so unrelated routing failures cannot break the gate.
 _signals = _load_file("fast_path_signals", SCRIPT_DIR / "task_signals.py")
 
 
@@ -78,10 +75,7 @@ _memory = None
 # Same ceiling the priority producer uses for small edits, so the two admissions agree.
 MAX_FAST_PATH_SCORE = 24
 
-# Reading/auditing already stays inline in the normal flow, so admitting it here would
-# credit the fast path with work that never routed. This is matched against the prompt
-# rather than against infer_operation(): that inferrer only ever returns an edit verb,
-# "answer", or "work", so it can never report a read-only operation.
+# Match read-only prompts directly; infer_operation() only returns edit verbs, answer or work.
 READ_ONLY_PATTERN = re.compile(r"\b(?:audit|look ?up|read|review|inspect|check|show|list|status|verify|explain|summari[sz]e)\b")
 
 # Any of these in the prompt means the task is not the small, self-contained edit this

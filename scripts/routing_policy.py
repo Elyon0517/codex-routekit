@@ -8,10 +8,7 @@ from pathlib import Path
 # Repo root. Reference documents and the shared ladder ship with the engine, so they
 # resolve from here rather than from any deployed skills directory a caller passes in.
 ENGINE_ROOT = Path(__file__).resolve().parents[1]
-# The shipped ladder is *runtime* config: `sync_model_capabilities.py --update` rewrites it
-# to match whichever Codex catalog this machine actually has. Tests must not ride on that --
-# a suite that only passes when the local catalog happens to contain a particular model is
-# not testing the engine, it is testing the machine. Tests point this at a frozen fixture.
+# Runtime sync rewrites the ladder; tests must use a frozen catalog fixture.
 MODEL_LADDER_ENV = "TOKEN_SAVER_MODEL_LADDER"
 MODEL_CAPABILITY_CONFIG_PATH = Path(os.environ.get(MODEL_LADDER_ENV) or (ENGINE_ROOT / "assets" / "model-capability-ladder.json")).expanduser()
 MODEL_REGISTRY_SCRIPT_PATH = Path(__file__).resolve().with_name("model_registry.py")
@@ -292,10 +289,7 @@ def validate_execution_domain_registry(reference_root=None):
                 raise ValueError(f"language_alias is reused by registry: {alias}")
             aliases.append(alias)
             seen_aliases.add(alias)
-        # owner_skill is a route-contract *label*: the dispatcher checks that a plan node
-        # declares the owner this domain expects. It is deliberately not resolved against the
-        # filesystem -- that assumed the upstream Codex skill-bundle deployment shape, which
-        # this engine no longer requires. reference_path below is the real, checked artifact.
+        # owner_skill is a contract label, not an installed directory; validate reference_path instead.
         if not isinstance(metadata["owner_skill"], str) or not metadata["owner_skill"]:
             raise ValueError(f"execution domain {domain} has invalid owner_skill")
         if not isinstance(metadata["owner_enforced"], bool):
