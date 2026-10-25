@@ -688,11 +688,7 @@ def benchmark_auto_launch_evidence(cache_root, workload_sha256, expected_entry_p
 def run_receipt(args, prompt_text):
     authorization = authorize_receipt_run(args)
     if local_producer.handles_model(getattr(args, "model", None)):
-        # The local endpoint is answered in-process: no subprocess, no JSON event stream,
-        # no thread database, no rollout. None of the reconstruction below applies, so
-        # local_producer builds its own receipt from what it can actually observe.
-        # Effort and fallback are passed through rather than dropped -- it refuses a pair
-        # it cannot honor instead of substituting its own.
+        # Local execution builds receipts in-process and rejects unsupported effort/fallback pairs.
         return local_producer.run(
             prompt_text,
             workload_id=getattr(args, "workload_id", "local-producer"),
@@ -711,11 +707,7 @@ def run_receipt(args, prompt_text):
     allowed_fallback_pairs = normalize_fallback_pairs(getattr(args, "allow_fallback", []))
     requested_pair = requested_pair_tuple
     allowed_pairs = [requested_pair] + [parse_model_effort_pair(value) for value in allowed_fallback_pairs]
-    # Everything from here down is Codex-shaped on purpose: the command, the `--json`
-    # event stream parsed out of stdout, the thread database read, and the rollout file.
-    # They are one unit -- the receipt's evidence comes from all four agreeing -- so the
-    # command is built inline rather than behind an abstraction that could imply the rest
-    # is swappable. It is not. See README "What this engine runs on".
+    # Codex receipts require the command, JSON events, thread database and rollout evidence to agree.
     command = [
         args.codex_bin,
         "exec",

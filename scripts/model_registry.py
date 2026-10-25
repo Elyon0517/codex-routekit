@@ -194,10 +194,8 @@ def build_registry(catalog, catalog_sha256=None):
     model_rows = [_model_row(model, rank, effort_order, role_models) for rank, model in enumerate(quality_models, start=1)]
     active_model_ids = {model["id"] for model in model_rows}
     catalog_models = []
-    # Only the active quality family and the priority producer are retained, so a
-    # background catalog refresh that reintroduces an older family cannot leak it into
-    # the registry or the semantic digest. validate_registry still accepts a
-    # `catalog_only` role for forward compatibility; nothing emits it today.
+    # Retain only the active family and priority producer to keep older catalog entries out of the digest.
+    # catalog_only remains accepted for forward compatibility.
     selected_catalog_ids = {model["slug"] for model in visible_models if model is priority_model or model["slug"] in active_model_ids}
     for model in sorted(visible_models, key=lambda model: (model["priority"], model["slug"])):
         if model["slug"] not in selected_catalog_ids:
